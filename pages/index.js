@@ -733,14 +733,20 @@ Example format: ["They can build a profitable business 3x faster than traditiona
                     Continue from Step {userProfile.step}
                   </button>
                   <button
-                    onClick={() => {
-                      setUserName('');
-                      setStep(0);
-                      setUserAnswers({
-                        icpDesire: '', icpDecision: '', currentProblem: '', icpDestination: '',
-                        uniqueFramework: '', fourDesires: '', sixSs: '', promisedResult: ''
-                      });
-                    }}
+                    onClick={async () => {
+  setUserName('');
+  setStep(0);
+  setUserAnswers({
+    icpDesire: '', icpDecision: '', currentProblem: '', icpDestination: '',
+    uniqueFramework: '', fourDesires: '', sixSs: '', promisedResult: ''
+  });
+  // Clear localStorage and reset profile
+  localStorage.removeItem('gravity_user_profile');
+  setUserProfile(null);
+  setGeneratedStatements({ solutionStatement: '', uspStatement: '' });
+  setGeneratedStatementsHistory([]);
+  setCurrentHistoryIndex(-1);
+}}
                     className="w-full px-6 py-3 font-semibold bg-slate-500 text-white rounded-lg hover:bg-slate-600 transition-all duration-300"
                   >
                     Start Over
