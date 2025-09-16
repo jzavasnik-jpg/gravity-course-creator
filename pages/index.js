@@ -625,11 +625,19 @@ Example format: ["They can build a profitable business 3x faster than traditiona
       case 6: updatedAnswers.fourDesires = inputValue; break;
       case 7: updatedAnswers.sixSs = inputValue; break;
       case 8:
-        updatedAnswers.promisedResult = inputValue;
-        setUserAnswers(updatedAnswers);
-        generateStatements(updatedAnswers);
-        setInputValue('');
-        return;
+  updatedAnswers.promisedResult = inputValue;
+  setUserAnswers(updatedAnswers);
+  
+  // Save the answers and continue to step 9 for now
+  await saveUserData({
+    firstName: userName,
+    userAnswers: updatedAnswers,
+    step: 9
+  });
+  
+  setStep(9);
+  setInputValue('');
+  return;
       default:
         break;
     }
@@ -650,15 +658,35 @@ Example format: ["They can build a profitable business 3x faster than traditiona
   };
 
   const handleSuggestionClick = (suggestion) => {
-    if (step === 6 || step === 7) {
-      setInputValue(suggestion.label || suggestion);
-      setIsInputDisabled(true);
-    } else if (step === 5) {
-      setInputValue(suggestion.name || suggestion);
-    } else {
-      setInputValue(prev => prev ? `${prev}, ${suggestion}` : suggestion);
-    }
-  };
+  if (step === 6 || step === 7) {
+    setInputValue(suggestion.label || suggestion);
+    setIsInputDisabled(true);
+  } else if (step === 5) {
+    // For step 5, suggestion should be an object with name and description
+    const frameworkName = typeof suggestion === 'object' ? suggestion.name : suggestion;
+    setInputValue(prev => {
+      if (prev.trim() === '') {
+        return frameworkName;
+      } else {
+        return prev + '\n\n' + frameworkName;
+      }
+    });
+  } else {
+    // For other steps, allow multiple selections
+    const suggestionText = typeof suggestion === 'object' ? suggestion.label || suggestion.name : suggestion;
+    setInputValue(prev => {
+      if (prev.trim() === '') {
+        return suggestionText;
+      } else {
+        // Add as a new paragraph if it's not already included
+        if (!prev.includes(suggestionText)) {
+          return prev + '\n\n' + suggestionText;
+        }
+        return prev;
+      }
+    });
+  }
+};
 
   const saveUserName = async () => {
     if (userName.trim()) {
@@ -961,9 +989,31 @@ Example format: ["They can build a profitable business 3x faster than traditiona
           <div className="flex items-center gap-8">
             <h1 className="text-xl font-semibold text-slate-800">Gravity Course Creator</h1>
             <div className="flex items-center gap-4">
-              <button className="px-4 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors">
-                Create
-              </button>
+              <button 
+  onClick={() => {
+    // Reset everything to start a new course
+    setStep(0);
+    setUserName('');
+    setInputValue('');
+    setUserAnswers({
+      icpDesire: '', icpDecision: '', currentProblem: '', icpDestination: '',
+      uniqueFramework: '', fourDesires: '', sixSs: '', promisedResult: ''
+    });
+    setGeneratedStatements({ solutionStatement: '', uspStatement: '' });
+    setGeneratedStatementsHistory([]);
+    setCurrentHistoryIndex(-1);
+    setAvatars({
+      male: { name: '', age: '', income: '', location: '', occupation: '', imageUrl: '', painPoints: {} },
+      female: { name: '', age: '', income: '', location: '', occupation: '', imageUrl: '', painPoints: {} }
+    });
+    setCourseOutline(null);
+    // Clear localStorage
+    localStorage.removeItem('gravity_user_profile');
+  }}
+  className="px-4 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+>
+  Create New Course
+</button>
               <button className="px-4 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors">
                 Asset Library
               </button>
