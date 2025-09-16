@@ -1,32 +1,19 @@
-// api/generate-statements.js
 export default async function handler(req, res) {
-  // Only allow POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const { answers } = req.body;
+    const { answers, userId } = req.body;
+    const apiKey = process.env.GOOGLE_API_KEY;
 
-    // Make sure we have the required data
-    if (!answers) {
-      return res.status(400).json({ error: 'Missing answers data' });
-    }
-
-    // Get API key from environment variable (secure)
-    const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      return res.status(500).json({ error: 'API key not configured' });
+      throw new Error('Google API key not configured');
     }
 
-    // Create the prompt for generating final statements
-    const prompt = `You are a world-class marketing copywriter and strategist. Generate two powerful marketing statements based on the provided Ideal Client Profile (ICP) data.
+    const prompt = `You are an expert marketing strategist. Based on the following ideal customer profile answers, generate two powerful marketing statements in JSON format.
 
-SOLUTION STATEMENT FORMAT: 'I help [ICP Decision] to [ICP Destination] by teaching them how to [three alliterative action verbs] their dream life.'
-
-USP STATEMENT FORMAT: 'The Gravity Method is the key to [ICP desire] and is only attainable through [unique mechanism name].'
-
-ICP DATA:
+Customer Profile:
 - Deepest Desire: ${answers.icpDesire}
 - Key Decision: ${answers.icpDecision}
 - Current Problem: ${answers.currentProblem}
@@ -36,16 +23,22 @@ ICP DATA:
 - Primary Emotion: ${answers.sixSs}
 - Promised Result: ${answers.promisedResult}
 
-REQUIREMENTS:
-1. Make the solution statement compelling and use strong alliterative verbs
-2. Make the USP statement powerful and unique
-3. Keep both statements concise and impactful
-4. Return ONLY a JSON object with "solutionStatement" and "uspStatement" properties
+Generate a JSON response with exactly this format:
+{
+  "solutionStatement": "A compelling solution statement that addresses their problem and desire",
+  "uspStatement": "A unique selling proposition that highlights your competitive advantage"
+}
 
-Generate the statements now:`;
+Make the statements:
+1. Emotionally compelling and specific to their situation
+2. Clear about the transformation promised
+3. Professional but conversational
+4. Focus on outcomes and benefits
+5. Maximum 2-3 sentences each
 
-    // Call Google Gemini API
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+Return ONLY the JSON, no other text.`;
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -57,14 +50,10 @@ Generate the statements now:`;
           }]
         }],
         generationConfig: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: "OBJECT",
-            properties: {
-              solutionStatement: { type: "STRING" },
-              uspStatement: { type: "STRING" }
-            }
-          }
+          temperature: 0.8,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 1024,
         }
       })
     });
@@ -74,25 +63,30 @@ Generate the statements now:`;
     }
 
     const data = await response.json();
-    
-    // Extract the generated content
-    const generatedText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    
-    if (!generatedText) {
-      throw new Error('No content generated');
+    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    let statements;
+    try {
+      statements = JSON.parse(generatedText);
+    } catch (parseError) {
+      const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        statements = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error('Could not parse statements from AI response');
+      }
     }
 
-    // Parse the JSON response
-    const statements = JSON.parse(generatedText);
-
-    return res.status(200).json({ 
-      statements: statements 
+    return res.status(200).json({
+      statements: statements,
+      userId: userId
     });
 
   } catch (error) {
     console.error('Error generating statements:', error);
     return res.status(500).json({ 
-      error: `Failed to generate statements: ${error.message}` 
+      error: 'Failed to generate statements',
+      details: error.message 
     });
   }
 }
