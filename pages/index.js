@@ -649,19 +649,15 @@ Example format: ["They can build a profitable business 3x faster than traditiona
   };
 
   const handleSuggestionClick = (suggestion) => {
-  if (step === 6 || step === 7) {
-    setInputValue(suggestion.label || suggestion);
-    setIsInputDisabled(true);
-  } else if (step === 5) {
-    // For step 5, suggestion should be an object with name and description
-    const frameworkName = typeof suggestion === 'object' ? suggestion.name : suggestion;
-    setInputValue(frameworkName);
-  } else {
-    // For other steps, just use the suggestion text
-    const suggestionText = typeof suggestion === 'object' ? suggestion.label || suggestion.name : suggestion;
-    setInputValue(prev => prev ? `${prev}, ${suggestionText}` : suggestionText);
-  }
-};
+    if (step === 6 || step === 7) {
+      setInputValue(suggestion.label || suggestion);
+      setIsInputDisabled(true);
+    } else if (step === 5) {
+      setInputValue(suggestion.name || suggestion);
+    } else {
+      setInputValue(prev => prev ? `${prev}, ${suggestion}` : suggestion);
+    }
+  };
 
   const saveUserName = async () => {
     if (userName.trim()) {
@@ -802,21 +798,26 @@ Example format: ["They can build a profitable business 3x faster than traditiona
 
     // Regular question steps
     return (
-      <div className="h-full flex flex-col">
+      <div className="space-y-6">
         <div className="mb-6">
-          <div className="text-lg text-slate-600 mb-2">
+          <div className="text-sm text-slate-500 mb-2">
             Step {step} of 8
           </div>
           <h2 className="text-2xl font-bold mb-4 text-slate-800">
             {questions[step - 1]}
           </h2>
-          <textarea
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            disabled={isInputDisabled}
-            placeholder="Type your answer here..."
-            className="w-full h-32 px-4 py-3 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-800 resize-none"
-          />
+          
+          {/* Input Field */}
+          <div className="relative">
+            <textarea
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              disabled={isInputDisabled}
+              placeholder="Type your answer here or click suggestions below..."
+              className="w-full h-32 px-4 py-3 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-800 resize-none"
+            />
+          </div>
+          
           <button
             onClick={handleNextStep}
             disabled={!inputValue.trim() || isLoading}
@@ -829,86 +830,160 @@ Example format: ["They can build a profitable business 3x faster than traditiona
             {isLoading ? 'Processing...' : 'Next Step'}
           </button>
         </div>
+
+        {/* AI Suggestions Section */}
+        {suggestions.length > 0 && (
+          <div className="border-t border-slate-200 pt-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <h3 className="text-lg font-medium text-slate-700">
+                AI Suggestions
+              </h3>
+              <span className="text-xs text-slate-500">(Click to add to your answer)</span>
+            </div>
+            
+            {isLoadingSuggestions ? (
+              <div className="flex items-center justify-center h-24">
+                <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {suggestions.map((suggestion, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleSuggestionClick(suggestion)}
+                    className="w-full text-left p-4 bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-all duration-200 group"
+                  >
+                    <div className="font-medium text-slate-800 group-hover:text-blue-700 transition-colors">
+                      {suggestion.label || suggestion.name || suggestion}
+                    </div>
+                    {suggestion.description && (
+                      <div className="text-sm text-slate-600 mt-1 leading-relaxed">
+                        {suggestion.description}
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+            
+            {apiError && (
+              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                {apiError}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     );
   };
 
-  // Main app layout
-  return (
-    <div className="min-h-screen bg-slate-100">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 min-h-[600px]">
-              {/* Input Panel */}
-              <div className="p-8 border-r border-slate-200">
-                {renderInputPanel()}
+  // Render the preview panel content
+  const renderPreviewPanel = () => {
+    if (step === 0) {
+      return (
+        <div className="p-8 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl border border-blue-200/50">
+          <h3 className="text-lg font-semibold text-slate-800 mb-4">Course Creator Preview</h3>
+          <p className="text-slate-600 leading-relaxed">
+            Welcome to the Gravity Course Creator! This tool will guide you through creating your ideal customer profile and marketing statements. 
+            Once you enter your name, we'll begin the 8-step process to build your course foundation.
+          </p>
+        </div>
+      );
+    }
+
+    if (step >= 1 && step <= 8) {
+      return (
+        <div className="space-y-6">
+          <div className="p-6 bg-gradient-to-br from-slate-50 to-blue-50 rounded-xl border border-slate-200/50">
+            <h3 className="text-lg font-semibold text-slate-800 mb-4">Progress Overview</h3>
+            <div className="grid grid-cols-4 gap-2 mb-4">
+              {[1,2,3,4,5,6,7,8].map((stepNum) => (
+                <div
+                  key={stepNum}
+                  className={`h-2 rounded-full ${
+                    stepNum < step ? 'bg-blue-500' : 
+                    stepNum === step ? 'bg-blue-300' : 'bg-slate-200'
+                  }`}
+                />
+              ))}
+            </div>
+            <p className="text-sm text-slate-600">Step {step} of 8 completed</p>
+          </div>
+          
+          {Object.entries(userAnswers).filter(([key, value]) => value.trim() !== '').map(([key, value], index) => (
+            <div key={key} className="p-4 bg-white rounded-lg border border-slate-200/50 shadow-sm">
+              <h4 className="text-sm font-medium text-slate-700 mb-2 capitalize">
+                {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+              </h4>
+              <p className="text-slate-600 text-sm leading-relaxed">{value}</p>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    if (step === 9) {
+      return (
+        <div className="space-y-6">
+          <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-100 rounded-xl border border-green-200/50">
+            <h3 className="text-lg font-semibold text-slate-800 mb-4">Generated Statements</h3>
+            <div className="space-y-4">
+              <div className="p-4 bg-white/80 rounded-lg">
+                <h4 className="text-sm font-semibold text-slate-700 mb-2">Solution Statement</h4>
+                <p className="text-slate-600 text-sm leading-relaxed">{generatedStatements.solutionStatement}</p>
               </div>
-
-              {/* Suggestions Panel */}
-              <div className="p-8 bg-slate-50">
-                <div className="h-full">
-                  {step > 0 && step <= 8 && showSuggestions && (
-                    <div>
-                      <h3 className="text-xl font-semibold mb-4 text-slate-800">
-                        AI Suggestions
-                      </h3>
-                      {isLoadingSuggestions ? (
-                        <div className="flex items-center justify-center h-32">
-                          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                        </div>
-                      ) : suggestions.length > 0 ? (
-                        <div className="space-y-3">
-                          {suggestions.map((suggestion, index) => (
-                            <button
-                              key={index}
-                              onClick={() => handleSuggestionClick(suggestion)}
-                              className="w-full text-left p-4 bg-white border border-slate-200 rounded-lg hover:border-blue-300 hover:shadow-md transition-all duration-200"
-                            >
-                              <div className="font-medium text-slate-800">
-                                {suggestion.label || suggestion.name || suggestion}
-                              </div>
-                              {suggestion.description && (
-                                <div className="text-sm text-slate-600 mt-1">
-                                  {suggestion.description}
-                                </div>
-                              )}
-                            </button>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-slate-500 text-center h-32 flex items-center justify-center">
-                          No suggestions available for this step.
-                        </div>
-                      )}
-                      {apiError && (
-                        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                          {apiError}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {step === 9 && (
-                    <div>
-                      <h3 className="text-xl font-semibold mb-4 text-slate-800">
-                        Your Marketing Statements
-                      </h3>
-                      <div className="space-y-4">
-                        <div className="p-4 bg-white rounded-lg border border-slate-200">
-                          <h4 className="font-semibold text-slate-800 mb-2">Solution Statement</h4>
-                          <p className="text-slate-600">{generatedStatements.solutionStatement}</p>
-                        </div>
-                        <div className="p-4 bg-white rounded-lg border border-slate-200">
-                          <h4 className="font-semibold text-slate-800 mb-2">USP Statement</h4>
-                          <p className="text-slate-600">{generatedStatements.uspStatement}</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
+              <div className="p-4 bg-white/80 rounded-lg">
+                <h4 className="text-sm font-semibold text-slate-700 mb-2">USP Statement</h4>
+                <p className="text-slate-600 text-sm leading-relaxed">{generatedStatements.uspStatement}</p>
               </div>
             </div>
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  // Main app layout
+  return (
+    <div className="min-h-screen bg-slate-50">
+      {/* Navigation Bar */}
+      <nav className="bg-white border-b border-slate-200 px-6 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-8">
+            <h1 className="text-xl font-semibold text-slate-800">Gravity Course Creator</h1>
+            <div className="flex items-center gap-4">
+              <button className="px-4 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors">
+                Create
+              </button>
+              <button className="px-4 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors">
+                Asset Library
+              </button>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="text-sm text-slate-600">
+              {userName && `Welcome, ${userName}`}
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <div className="flex h-[calc(100vh-80px)]">
+        {/* Input Panel */}
+        <div className="w-1/2 p-8 overflow-y-auto">
+          <div className="max-w-2xl">
+            {renderInputPanel()}
+          </div>
+        </div>
+
+        {/* Preview Panel */}
+        <div className="w-1/2 p-8 bg-slate-100 border-l border-slate-200 overflow-y-auto">
+          <div className="max-w-2xl">
+            {renderPreviewPanel()}
           </div>
         </div>
       </div>
