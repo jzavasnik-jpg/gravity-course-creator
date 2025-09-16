@@ -250,16 +250,17 @@ Example format: ["They can build a profitable business 3x faster than traditiona
       const prompt = createPromptForStep(step, userAnswers);
       
       const response = await fetch('/api/generate-suggestions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          prompt,
-          step,
-          userId // Send user ID for potential personalization
-        })
-      });
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    prompt,
+    step,
+    userId,
+    userAnswers // Add this line
+  })
+});
 
       if (!response.ok) {
         throw new Error(`API call failed: ${response.status}`);
