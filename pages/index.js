@@ -798,22 +798,71 @@ Example format: ["They can build a profitable business 3x faster than traditiona
 
     // Regular question steps
     return (
-      <div className="space-y-6">
-        <div className="mb-6">
+      <div className="h-full flex flex-col">
+        {/* Question Header - Pinned to Top */}
+        <div className="flex-shrink-0 pb-6 border-b border-slate-200">
           <div className="text-sm text-slate-500 mb-2">
             Step {step} of 8
           </div>
-          <h2 className="text-2xl font-bold mb-4 text-slate-800">
+          <h2 className="text-xl font-bold text-slate-800 leading-tight">
             {questions[step - 1]}
           </h2>
-          
-          {/* Input Field */}
+        </div>
+
+        {/* Suggestions - Scrollable Middle Section */}
+        <div className="flex-1 overflow-y-auto py-6">
+          {suggestions.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <h3 className="text-lg font-medium text-slate-700">
+                  AI Suggestions
+                </h3>
+                <span className="text-xs text-slate-500">(Click to add to your answer)</span>
+              </div>
+              
+              {isLoadingSuggestions ? (
+                <div className="flex items-center justify-center h-32">
+                  <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {suggestions.map((suggestion, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      className="w-full text-left p-4 bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-all duration-200 group"
+                    >
+                      <div className="font-medium text-slate-800 group-hover:text-blue-700 transition-colors">
+                        {suggestion.label || suggestion.name || suggestion}
+                      </div>
+                      {suggestion.description && (
+                        <div className="text-sm text-slate-600 mt-1 leading-relaxed">
+                          {suggestion.description}
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+              
+              {apiError && (
+                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                  {apiError}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Input Field - Pinned to Bottom */}
+        <div className="flex-shrink-0 pt-6 border-t border-slate-200">
           <div className="relative">
             <textarea
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               disabled={isInputDisabled}
-              placeholder="Type your answer here or click suggestions below..."
+              placeholder="Type your answer here or click suggestions above..."
               className="w-full h-32 px-4 py-3 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-800 resize-none"
             />
           </div>
@@ -830,50 +879,6 @@ Example format: ["They can build a profitable business 3x faster than traditiona
             {isLoading ? 'Processing...' : 'Next Step'}
           </button>
         </div>
-
-        {/* AI Suggestions Section */}
-        {suggestions.length > 0 && (
-          <div className="border-t border-slate-200 pt-6">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <h3 className="text-lg font-medium text-slate-700">
-                AI Suggestions
-              </h3>
-              <span className="text-xs text-slate-500">(Click to add to your answer)</span>
-            </div>
-            
-            {isLoadingSuggestions ? (
-              <div className="flex items-center justify-center h-24">
-                <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {suggestions.map((suggestion, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleSuggestionClick(suggestion)}
-                    className="w-full text-left p-4 bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-all duration-200 group"
-                  >
-                    <div className="font-medium text-slate-800 group-hover:text-blue-700 transition-colors">
-                      {suggestion.label || suggestion.name || suggestion}
-                    </div>
-                    {suggestion.description && (
-                      <div className="text-sm text-slate-600 mt-1 leading-relaxed">
-                        {suggestion.description}
-                      </div>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-            
-            {apiError && (
-              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                {apiError}
-              </div>
-            )}
-          </div>
-        )}
       </div>
     );
   };
