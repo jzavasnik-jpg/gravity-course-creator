@@ -255,11 +255,11 @@ Example format: ["They can build a profitable business 3x faster than traditiona
     'Content-Type': 'application/json',
   },
   body: JSON.stringify({
-    prompt,
-    step,
-    userId,
-    userAnswers // Add this line
-  })
+  prompt,
+  step,
+  userId,
+  userAnswers: userAnswers || {} // Ensure it's always an object
+})
 });
 
       if (!response.ok) {
