@@ -649,15 +649,19 @@ Example format: ["They can build a profitable business 3x faster than traditiona
   };
 
   const handleSuggestionClick = (suggestion) => {
-    if (step === 6 || step === 7) {
-      setInputValue(suggestion.label || suggestion);
-      setIsInputDisabled(true);
-    } else if (step === 5) {
-      setInputValue(suggestion.name || suggestion);
-    } else {
-      setInputValue(prev => prev ? `${prev}, ${suggestion}` : suggestion);
-    }
-  };
+  if (step === 6 || step === 7) {
+    setInputValue(suggestion.label || suggestion);
+    setIsInputDisabled(true);
+  } else if (step === 5) {
+    // For step 5, suggestion should be an object with name and description
+    const frameworkName = typeof suggestion === 'object' ? suggestion.name : suggestion;
+    setInputValue(frameworkName);
+  } else {
+    // For other steps, just use the suggestion text
+    const suggestionText = typeof suggestion === 'object' ? suggestion.label || suggestion.name : suggestion;
+    setInputValue(prev => prev ? `${prev}, ${suggestionText}` : suggestionText);
+  }
+};
 
   const saveUserName = async () => {
     if (userName.trim()) {
