@@ -786,4 +786,130 @@ Example format: ["They can build a profitable business 3x faster than traditiona
               className={`px-6 py-3 font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 ${
                 isGeneratingAvatars
                   ? 'bg-slate-400 text-white cursor-not-allowed'
-                  : 
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+            >
+              {isGeneratingAvatars ? 'Generating Avatars...' : 'Generate Customer Avatars'}
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // Regular question steps
+    return (
+      <div className="h-full flex flex-col">
+        <div className="mb-6">
+          <div className="text-lg text-slate-600 mb-2">
+            Step {step} of 8
+          </div>
+          <h2 className="text-2xl font-bold mb-4 text-slate-800">
+            {questions[step - 1]}
+          </h2>
+          <textarea
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            disabled={isInputDisabled}
+            placeholder="Type your answer here..."
+            className="w-full h-32 px-4 py-3 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-800 resize-none"
+          />
+          <button
+            onClick={handleNextStep}
+            disabled={!inputValue.trim() || isLoading}
+            className={`w-full mt-4 px-6 py-3 font-semibold rounded-lg transition-all duration-300 ${
+              inputValue.trim() && !isLoading
+                ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
+                : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+            }`}
+          >
+            {isLoading ? 'Processing...' : 'Next Step'}
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // Main app layout
+  return (
+    <div className="min-h-screen bg-slate-100">
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 min-h-[600px]">
+              {/* Input Panel */}
+              <div className="p-8 border-r border-slate-200">
+                {renderInputPanel()}
+              </div>
+
+              {/* Suggestions Panel */}
+              <div className="p-8 bg-slate-50">
+                <div className="h-full">
+                  {step > 0 && step <= 8 && showSuggestions && (
+                    <div>
+                      <h3 className="text-xl font-semibold mb-4 text-slate-800">
+                        AI Suggestions
+                      </h3>
+                      {isLoadingSuggestions ? (
+                        <div className="flex items-center justify-center h-32">
+                          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                      ) : suggestions.length > 0 ? (
+                        <div className="space-y-3">
+                          {suggestions.map((suggestion, index) => (
+                            <button
+                              key={index}
+                              onClick={() => handleSuggestionClick(suggestion)}
+                              className="w-full text-left p-4 bg-white border border-slate-200 rounded-lg hover:border-blue-300 hover:shadow-md transition-all duration-200"
+                            >
+                              <div className="font-medium text-slate-800">
+                                {suggestion.label || suggestion.name || suggestion}
+                              </div>
+                              {suggestion.description && (
+                                <div className="text-sm text-slate-600 mt-1">
+                                  {suggestion.description}
+                                </div>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-slate-500 text-center h-32 flex items-center justify-center">
+                          No suggestions available for this step.
+                        </div>
+                      )}
+                      {apiError && (
+                        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                          {apiError}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {step === 9 && (
+                    <div>
+                      <h3 className="text-xl font-semibold mb-4 text-slate-800">
+                        Your Marketing Statements
+                      </h3>
+                      <div className="space-y-4">
+                        <div className="p-4 bg-white rounded-lg border border-slate-200">
+                          <h4 className="font-semibold text-slate-800 mb-2">Solution Statement</h4>
+                          <p className="text-slate-600">{generatedStatements.solutionStatement}</p>
+                        </div>
+                        <div className="p-4 bg-white rounded-lg border border-slate-200">
+                          <h4 className="font-semibold text-slate-800 mb-2">USP Statement</h4>
+                          <p className="text-slate-600">{generatedStatements.uspStatement}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default App;
