@@ -6,25 +6,15 @@ export default async function handler(req, res) {
   try {
     const { answers, statementType, userId } = req.body;
 
-    const alternativeStatements = {
-      solution: [
-        `${answers.uniqueFramework || 'Our proven system'} is specifically designed for ${getTargetAudience(answers)} who want to ${getDesirePhrase(answers)} without ${getProblemPhrase(answers)}.`,
-        `We help ${getTargetAudience(answers)} transform from ${getProblemPhrase(answers)} to ${getOutcomePhrase(answers)} using our ${answers.uniqueFramework || 'step-by-step methodology'}.`,
-        `If you're ${getProblemPhrase(answers)}, our ${answers.uniqueFramework || 'proven framework'} is the fastest path to ${getOutcomePhrase(answers)}.`
-      ],
-      usp: [
-        `What makes us different: while others ${getCompetitorProblem(answers)}, we deliver ${answers.promisedResult || 'real results'} through our exclusive ${answers.uniqueFramework || 'methodology'}.`,
-        `The ${answers.uniqueFramework || 'proven system'} advantage: ${answers.promisedResult || 'guaranteed results'} in less time with our ${answers.sixSs || 'unique'} approach.`,
-        `Unlike traditional methods that ${getCompetitorProblem(answers)}, our clients ${answers.promisedResult || 'see results fast'} because of our focus on ${answers.fourDesires || 'what truly matters'}.`
-      ]
-    };
-
-    const randomStatement = alternativeStatements[statementType][
-      Math.floor(Math.random() * alternativeStatements[statementType].length)
-    ];
+    let statement;
+    if (statementType === 'solution') {
+      statement = generateAlternateSolutionStatement(answers);
+    } else {
+      statement = generateAlternateUSPStatement(answers);
+    }
 
     return res.status(200).json({
-      statement: randomStatement,
+      statement: statement,
       userId: userId
     });
 
@@ -36,52 +26,80 @@ export default async function handler(req, res) {
   }
 }
 
-// Include the same helper functions as above
-function getTargetAudience(answers) {
+function generateAlternateSolutionStatement(answers) {
+  const verbSets = [
+    ['amplify', 'automate', 'accelerate'],
+    ['discover', 'develop', 'dominate'],
+    ['capture', 'convert', 'compound'],
+    ['establish', 'elevate', 'excel'],
+    ['generate', 'grow', 'guarantee'],
+    ['identify', 'implement', 'increase'],
+    ['maximize', 'master', 'monetize']
+  ];
+
+  const randomVerbSet = verbSets[Math.floor(Math.random() * verbSets.length)];
+  const targetAudience = extractTargetAudience(answers);
+  const outcome = extractDesiredOutcome(answers);
+  const mechanism = answers.uniqueFramework || 'cutting-edge strategies';
+  const promise = extractPromise(answers);
+
+  return `I help ${targetAudience} ${randomVerbSet[0]}, ${randomVerbSet[1]}, and ${randomVerbSet[2]} ${outcome} through ${mechanism} that ${promise}.`;
+}
+
+function generateAlternateUSPStatement(answers) {
+  const newOpportunity = answers.uniqueFramework || generateNewOpportunity(answers);
+  const icpDesire = extractCoreDesire(answers);
+  const mechanism = answers.uniqueFramework || newOpportunity;
+
+  return `${newOpportunity} is the key to ${icpDesire} and is only attainable through ${mechanism}.`;
+}
+
+// Include the same helper functions from the main statements API
+function extractTargetAudience(answers) {
   if (answers.icpDesire?.includes('entrepreneur')) return 'ambitious entrepreneurs';
-  if (answers.icpDesire?.includes('business')) return 'business owners';
-  if (answers.icpDesire?.includes('freedom')) return 'freedom-seeking professionals';
-  return 'motivated individuals';
+  if (answers.icpDesire?.includes('business owner')) return 'business owners';
+  if (answers.icpDesire?.includes('coach')) return 'coaches and consultants';
+  return 'driven professionals';
 }
 
-function getProblemPhrase(answers) {
-  if (answers.currentProblem) {
-    return answers.currentProblem.toLowerCase()
-      .replace('they feel like ', '')
-      .replace('they believe that ', '')
-      .replace('they ', '');
+function extractDesiredOutcome(answers) {
+  if (answers.icpDestination) {
+    let outcome = answers.icpDestination.toLowerCase()
+      .replace(/^they have /i, '').replace(/^they work /i, '').replace(/^they enjoy /i, '')
+      .replace(/^they /i, '').replace(/\.$/, '');
+    
+    if (outcome.includes('business')) return 'high-converting business systems';
+    if (outcome.includes('income')) return 'profitable income streams';
+    if (outcome.includes('freedom')) return 'time and location freedom';
+    return outcome;
   }
-  return 'struggle with common challenges';
+  return 'sustainable business success';
 }
 
-function getDesirePhrase(answers) {
+function extractCoreDesire(answers) {
   if (answers.icpDesire) {
     return answers.icpDesire.toLowerCase()
-      .replace('they want to ', '')
-      .replace('they desire to ', '')
-      .replace('they crave ', '')
-      .replace('they ', '');
+      .replace(/^they want to /i, '').replace(/^they desire to /i, '').replace(/^they crave /i, '')
+      .replace(/^they /i, '').replace(/\.$/, '');
   }
-  return 'achieve their goals';
+  return 'achieving their business goals';
 }
 
-function getOutcomePhrase(answers) {
-  if (answers.icpDestination) {
-    return answers.icpDestination.toLowerCase()
-      .replace('they have ', '')
-      .replace('they work ', '')
-      .replace('they enjoy ', '')
-      .replace('they ', '');
+function extractPromise(answers) {
+  if (answers.promisedResult) {
+    return answers.promisedResult.toLowerCase()
+      .replace(/^they can /i, '').replace(/^they will /i, '').replace(/^they get /i, '')
+      .replace(/^they /i, '').replace(/\.$/, '');
   }
-  return 'achieve their goals';
+  return 'deliver results faster than any other method';
 }
 
-function getCompetitorProblem(answers) {
-  if (answers.currentProblem) {
-    return answers.currentProblem.toLowerCase()
-      .replace('they feel like ', 'leave you feeling like ')
-      .replace('they believe that ', 'make you believe ')
-      .replace('they ', 'leave you ');
-  }
-  return 'leave you overwhelmed';
+function generateNewOpportunity(answers) {
+  const opportunities = [
+    'The Authority Acceleration Method',
+    'The Freedom Framework System', 
+    'The Scale Smart Protocol',
+    'The Impact Amplifier Strategy'
+  ];
+  return opportunities[Math.floor(Math.random() * opportunities.length)];
 }
