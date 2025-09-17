@@ -597,10 +597,10 @@ Example format: ["They can build a profitable business 3x faster than traditiona
 
   // Fetch suggestions when step changes
   useEffect(() => {
-    if (step > 0 && step <= 8 && isAuthReady) {
-      fetchSuggestions();
-    }
-  }, [step, userAnswers, isAuthReady]);
+  if (step > 0 && step <= 8 && isAuthReady) {
+    fetchSuggestions();
+  }
+}, [step, isAuthReady]); // Remove userAnswers dependency
 
   const questions = [
     "What is your ideal client's deepest desire? (The core tension they feel). For best results, please be as detailed as possible.",
