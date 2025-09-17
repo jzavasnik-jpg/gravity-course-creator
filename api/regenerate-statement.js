@@ -5,68 +5,83 @@ export default async function handler(req, res) {
 
   try {
     const { answers, statementType, userId } = req.body;
-    const apiKey = process.env.GOOGLE_API_KEY;
 
-    if (!apiKey) {
-      throw new Error('Google API key not configured');
-    }
-
-    const prompts = {
-      solution: `Based on this customer profile, create a compelling solution statement:
-      - Problem: ${answers.currentProblem}
-      - Desire: ${answers.icpDesire}
-      - Solution: ${answers.uniqueFramework}
-      - Result: ${answers.promisedResult}
-      
-      Format: "For [target customer] who [problem], our [solution] provides [result]."
-      Make it emotionally compelling and specific. Return only the statement text.`,
-      
-      usp: `Based on this customer profile, create a unique selling proposition:
-      - Framework: ${answers.uniqueFramework}
-      - Result: ${answers.promisedResult}
-      - Problem: ${answers.currentProblem}
-      
-      Highlight what makes this approach unique, faster, easier, or more complete than competitors.
-      Return only the USP statement text.`
+    const alternativeStatements = {
+      solution: [
+        `${answers.uniqueFramework || 'Our proven system'} is specifically designed for ${getTargetAudience(answers)} who want to ${getDesirePhrase(answers)} without ${getProblemPhrase(answers)}.`,
+        `We help ${getTargetAudience(answers)} transform from ${getProblemPhrase(answers)} to ${getOutcomePhrase(answers)} using our ${answers.uniqueFramework || 'step-by-step methodology'}.`,
+        `If you're ${getProblemPhrase(answers)}, our ${answers.uniqueFramework || 'proven framework'} is the fastest path to ${getOutcomePhrase(answers)}.`
+      ],
+      usp: [
+        `What makes us different: while others ${getCompetitorProblem(answers)}, we deliver ${answers.promisedResult || 'real results'} through our exclusive ${answers.uniqueFramework || 'methodology'}.`,
+        `The ${answers.uniqueFramework || 'proven system'} advantage: ${answers.promisedResult || 'guaranteed results'} in less time with our ${answers.sixSs || 'unique'} approach.`,
+        `Unlike traditional methods that ${getCompetitorProblem(answers)}, our clients ${answers.promisedResult || 'see results fast'} because of our focus on ${answers.fourDesires || 'what truly matters'}.`
+      ]
     };
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: prompts[statementType]
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.9,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 512,
-        }
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const statement = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    const randomStatement = alternativeStatements[statementType][
+      Math.floor(Math.random() * alternativeStatements[statementType].length)
+    ];
 
     return res.status(200).json({
-      statement: statement?.trim() || '',
+      statement: randomStatement,
       userId: userId
     });
 
   } catch (error) {
-    console.error('Error regenerating statement:', error);
     return res.status(500).json({ 
       error: 'Failed to regenerate statement',
       details: error.message 
     });
   }
+}
+
+// Include the same helper functions as above
+function getTargetAudience(answers) {
+  if (answers.icpDesire?.includes('entrepreneur')) return 'ambitious entrepreneurs';
+  if (answers.icpDesire?.includes('business')) return 'business owners';
+  if (answers.icpDesire?.includes('freedom')) return 'freedom-seeking professionals';
+  return 'motivated individuals';
+}
+
+function getProblemPhrase(answers) {
+  if (answers.currentProblem) {
+    return answers.currentProblem.toLowerCase()
+      .replace('they feel like ', '')
+      .replace('they believe that ', '')
+      .replace('they ', '');
+  }
+  return 'struggle with common challenges';
+}
+
+function getDesirePhrase(answers) {
+  if (answers.icpDesire) {
+    return answers.icpDesire.toLowerCase()
+      .replace('they want to ', '')
+      .replace('they desire to ', '')
+      .replace('they crave ', '')
+      .replace('they ', '');
+  }
+  return 'achieve their goals';
+}
+
+function getOutcomePhrase(answers) {
+  if (answers.icpDestination) {
+    return answers.icpDestination.toLowerCase()
+      .replace('they have ', '')
+      .replace('they work ', '')
+      .replace('they enjoy ', '')
+      .replace('they ', '');
+  }
+  return 'achieve their goals';
+}
+
+function getCompetitorProblem(answers) {
+  if (answers.currentProblem) {
+    return answers.currentProblem.toLowerCase()
+      .replace('they feel like ', 'leave you feeling like ')
+      .replace('they believe that ', 'make you believe ')
+      .replace('they ', 'leave you ');
+  }
+  return 'leave you overwhelmed';
 }
