@@ -776,54 +776,258 @@ Example format: ["They can build a profitable business 3x faster than traditiona
     }
 
     if (step === 9) {
-      return (
-        <div className="h-full flex flex-col">
-          <h2 className="text-2xl font-bold mb-4 text-slate-800">Statements Generated!</h2>
-          <p className="text-slate-600 mb-6">
-            Your AI-powered marketing statements are ready. You can edit them, regenerate individual statements, or view previous versions.
-          </p>
-          
-          {/* Statement History Navigation */}
-          {generatedStatementsHistory.length > 1 && (
-            <div className="mb-4 p-3 bg-slate-50 rounded-lg">
-              <div className="flex items-center justify-between text-sm text-slate-600">
-                <span>Statement Version: {currentHistoryIndex + 1} of {generatedStatementsHistory.length}</span>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => navigateHistory(-1)}
-                    disabled={currentHistoryIndex <= 0}
-                    className="px-3 py-1 bg-white border border-slate-200 rounded text-xs hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    ← Previous
-                  </button>
-                  <button
-                    onClick={() => navigateHistory(1)}
-                    disabled={currentHistoryIndex >= generatedStatementsHistory.length - 1}
-                    className="px-3 py-1 bg-white border border-slate-200 rounded text-xs hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Next →
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+  return (
+    <div className="h-full flex flex-col space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-slate-800">Generated Statements</h2>
+        {generatedStatementsHistory.length > 1 && (
+          <div className="text-sm text-slate-600">
+            Version {currentHistoryIndex + 1} of {generatedStatementsHistory.length}
+          </div>
+        )}
+      </div>
 
-          <div className="flex flex-col space-y-3">
+      {/* Solution Statement Card */}
+      <div className="border border-slate-200 rounded-lg p-6 bg-white shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="font-semibold text-slate-800 text-lg">Solution Statement</h3>
+            <p className="text-sm text-slate-600">Three-verb alliteration from your point of view</p>
+          </div>
+          <div className="flex gap-2">
             <button
-              onClick={generateAvatars}
-              disabled={isGeneratingAvatars}
-              className={`px-6 py-3 font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 ${
-                isGeneratingAvatars
-                  ? 'bg-slate-400 text-white cursor-not-allowed'
-                  : 'bg-blue-600 text-white hover:bg-blue-700'
-              }`}
+              onClick={() => regenerateStatement('solution')}
+              disabled={isLoading}
+              className="text-sm px-3 py-1.5 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 disabled:opacity-50 transition-colors"
             >
-              {isGeneratingAvatars ? 'Generating Avatars...' : 'Generate Customer Avatars'}
+              {isLoading ? 'Regenerating...' : 'Regenerate'}
+            </button>
+            {generatedStatementsHistory.length > 1 && (
+              <>
+                <button
+                  onClick={() => navigateHistory(-1)}
+                  disabled={currentHistoryIndex <= 0}
+                  className="text-sm px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 disabled:opacity-50 transition-colors"
+                >
+                  ← Previous
+                </button>
+                <button
+                  onClick={() => navigateHistory(1)}
+                  disabled={currentHistoryIndex >= generatedStatementsHistory.length - 1}
+                  className="text-sm px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 disabled:opacity-50 transition-colors"
+                >
+                  Next →
+                </button>
+              </>
+            )}
+            <button
+              onClick={() => {
+                if (isEditing.solution) {
+                  saveEditedStatements();
+                }
+                setIsEditing({...isEditing, solution: !isEditing.solution});
+              }}
+              className="text-sm px-3 py-1.5 bg-slate-100 text-slate-700 rounded-md hover:bg-slate-200 transition-colors"
+            >
+              {isEditing.solution ? 'Save' : 'Edit'}
             </button>
           </div>
         </div>
-      );
-    }
+        
+        {isEditing.solution ? (
+          <div className="space-y-3">
+            <textarea
+              value={generatedStatements.solutionStatement}
+              onChange={(e) => setGeneratedStatements({
+                ...generatedStatements,
+                solutionStatement: e.target.value
+              })}
+              className="w-full h-32 p-4 border border-slate-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter your solution statement..."
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  saveEditedStatements();
+                  setIsEditing({...isEditing, solution: false});
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Save Changes
+              </button>
+              <button
+                onClick={() => {
+                  // Revert to current history version
+                  if (currentHistoryIndex >= 0) {
+                    setGeneratedStatements(generatedStatementsHistory[currentHistoryIndex]);
+                  }
+                  setIsEditing({...isEditing, solution: false});
+                }}
+                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-slate-50 p-4 rounded-lg">
+            <p className="text-slate-800 leading-relaxed text-lg font-medium">
+              {generatedStatements.solutionStatement || 'No solution statement generated yet.'}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* USP Statement Card */}
+      <div className="border border-slate-200 rounded-lg p-6 bg-white shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="font-semibold text-slate-800 text-lg">USP Statement</h3>
+            <p className="text-sm text-slate-600">Unique selling proposition with key mechanism</p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => regenerateStatement('usp')}
+              disabled={isLoading}
+              className="text-sm px-3 py-1.5 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 disabled:opacity-50 transition-colors"
+            >
+              {isLoading ? 'Regenerating...' : 'Regenerate'}
+            </button>
+            {generatedStatementsHistory.length > 1 && (
+              <>
+                <button
+                  onClick={() => navigateHistory(-1)}
+                  disabled={currentHistoryIndex <= 0}
+                  className="text-sm px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 disabled:opacity-50 transition-colors"
+                >
+                  ← Previous
+                </button>
+                <button
+                  onClick={() => navigateHistory(1)}
+                  disabled={currentHistoryIndex >= generatedStatementsHistory.length - 1}
+                  className="text-sm px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 disabled:opacity-50 transition-colors"
+                >
+                  Next →
+                </button>
+              </>
+            )}
+            <button
+              onClick={() => {
+                if (isEditing.usp) {
+                  saveEditedStatements();
+                }
+                setIsEditing({...isEditing, usp: !isEditing.usp});
+              }}
+              className="text-sm px-3 py-1.5 bg-slate-100 text-slate-700 rounded-md hover:bg-slate-200 transition-colors"
+            >
+              {isEditing.usp ? 'Save' : 'Edit'}
+            </button>
+          </div>
+        </div>
+        
+        {isEditing.usp ? (
+          <div className="space-y-3">
+            <textarea
+              value={generatedStatements.uspStatement}
+              onChange={(e) => setGeneratedStatements({
+                ...generatedStatements,
+                uspStatement: e.target.value
+              })}
+              className="w-full h-32 p-4 border border-slate-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter your USP statement..."
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  saveEditedStatements();
+                  setIsEditing({...isEditing, usp: false});
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Save Changes
+              </button>
+              <button
+                onClick={() => {
+                  // Revert to current history version
+                  if (currentHistoryIndex >= 0) {
+                    setGeneratedStatements(generatedStatementsHistory[currentHistoryIndex]);
+                  }
+                  setIsEditing({...isEditing, usp: false});
+                }}
+                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-slate-50 p-4 rounded-lg">
+            <p className="text-slate-800 leading-relaxed text-lg font-medium">
+              {generatedStatements.uspStatement || 'No USP statement generated yet.'}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Global Statement Actions */}
+      <div className="flex gap-4 pt-4 border-t border-slate-200">
+        <button
+          onClick={() => {
+            // Regenerate both statements
+            const regenerateAll = async () => {
+              setIsLoading(true);
+              try {
+                const response = await fetch('/api/generate-statements', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ answers: userAnswers, userId })
+                });
+                const data = await response.json();
+                
+                const newStatements = data.statements;
+                const newHistory = [...generatedStatementsHistory, newStatements];
+                
+                setGeneratedStatements(newStatements);
+                setGeneratedStatementsHistory(newHistory);
+                setCurrentHistoryIndex(newHistory.length - 1);
+                
+                await saveUserData({ generatedStatementsHistory: newHistory });
+              } catch (error) {
+                setApiError('Failed to regenerate statements');
+              } finally {
+                setIsLoading(false);
+              }
+            };
+            regenerateAll();
+          }}
+          disabled={isLoading}
+          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors"
+        >
+          {isLoading ? 'Regenerating All...' : 'Regenerate Both Statements'}
+        </button>
+
+        <button
+          onClick={generateAvatars}
+          disabled={isGeneratingAvatars || !generatedStatements.solutionStatement || !generatedStatements.uspStatement}
+          className={`px-6 py-2 font-semibold rounded-lg transition-all duration-300 ${
+            isGeneratingAvatars || !generatedStatements.solutionStatement || !generatedStatements.uspStatement
+              ? 'bg-slate-400 text-white cursor-not-allowed'
+              : 'bg-blue-600 text-white hover:bg-blue-700'
+          }`}
+        >
+          {isGeneratingAvatars ? 'Generating Avatars...' : 'Continue to Customer Avatars'}
+        </button>
+      </div>
+
+      {/* Error Display */}
+      {apiError && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          {apiError}
+        </div>
+      )}
+    </div>
+  );
+}
 
     // Regular question steps
     return (
