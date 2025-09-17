@@ -624,18 +624,10 @@ Example format: ["They can build a profitable business 3x faster than traditiona
       case 5: updatedAnswers.uniqueFramework = inputValue; break;
       case 6: updatedAnswers.fourDesires = inputValue; break;
       case 7: updatedAnswers.sixSs = inputValue; break;
-      case 8:
+     case 8:
   updatedAnswers.promisedResult = inputValue;
   setUserAnswers(updatedAnswers);
-  
-  // Save the answers and continue to step 9 for now
-  await saveUserData({
-    firstName: userName,
-    userAnswers: updatedAnswers,
-    step: 9
-  });
-  
-  setStep(9);
+  generateStatements(updatedAnswers);
   setInputValue('');
   return;
       default:
