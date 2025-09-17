@@ -29,12 +29,17 @@ Generate a JSON response with exactly this format:
   "uspStatement": "A unique selling proposition that highlights your competitive advantage"
 }
 
-Make the statements:
-1. Emotionally compelling and specific to their situation
-2. Clear about the transformation promised
-3. Professional but conversational
-4. Focus on outcomes and benefits
-5. Maximum 2-3 sentences each
+Requirements for the statements:
+1. Solution Statement: Should clearly identify the target customer, their problem, and how your solution helps them achieve their desired outcome. Make it emotionally compelling and specific to their situation.
+
+2. USP Statement: Should differentiate you from competitors by highlighting what makes your approach unique, faster, easier, or more complete. Reference their unique framework and promised results.
+
+Both statements should be:
+- Emotionally compelling and specific to their situation
+- Clear about the transformation promised
+- Professional but conversational tone
+- 2-3 sentences each maximum
+- Focus on outcomes and benefits, not features
 
 Return ONLY the JSON, no other text.`;
 
@@ -64,6 +69,10 @@ Return ONLY the JSON, no other text.`;
 
     const data = await response.json();
     const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!generatedText) {
+      throw new Error('No content generated from Gemini');
+    }
 
     let statements;
     try {
