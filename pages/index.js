@@ -627,6 +627,8 @@ Example format: ["They can build a profitable business 3x faster than traditiona
      case 8:
   updatedAnswers.promisedResult = inputValue;
   setUserAnswers(updatedAnswers);
+  console.log('Case 8: About to call generateStatements');
+  console.log('Updated answers:', updatedAnswers);
   generateStatements(updatedAnswers);
   setInputValue('');
   return;
