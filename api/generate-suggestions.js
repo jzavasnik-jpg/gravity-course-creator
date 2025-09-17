@@ -6,28 +6,23 @@ export default async function handler(req, res) {
   try {
     const apiKey = process.env.GOOGLE_API_KEY;
     
-    // Test the most basic possible Gemini call
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: "Say hello"
-          }]
+    // Test everything EXCEPT the actual fetch call
+    const testUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+    const testBody = JSON.stringify({
+      contents: [{
+        parts: [{
+          text: "Say hello"
         }]
-      })
+      }]
     });
-
-    const responseText = await response.text();
     
     return res.status(200).json({
-      geminiStatus: response.status,
-      geminiOk: response.ok,
-      geminiResponse: responseText,
-      apiKeyExists: !!apiKey
+      message: "Everything prepared, but no external call made",
+      apiKeyExists: !!apiKey,
+      apiKeyLength: apiKey ? apiKey.length : 0,
+      apiKeyStart: apiKey ? apiKey.substring(0, 5) : 'none',
+      urlPrepared: testUrl.substring(0, 100) + '...',
+      bodyPrepared: testBody.length
     });
 
   } catch (error) {
