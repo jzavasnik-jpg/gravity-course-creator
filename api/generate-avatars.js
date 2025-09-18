@@ -44,7 +44,7 @@ function generateAvatar(gender, answers) {
   const occupations = getContextualOccupation(answers);
   const occupation = occupations[Math.floor(Math.random() * occupations.length)];
   
-  const painPoints = generatePainPoints(answers);
+  const sixSsPainPoints = generateSixSsPainPoints(answers, occupation);
 
   return {
     name: name,
@@ -53,8 +53,69 @@ function generateAvatar(gender, answers) {
     location: location,
     occupation: occupation,
     imageUrl: getAvatarImage(gender, name),
-    painPoints: painPoints
+    sixSsPainPoints: sixSsPainPoints
   };
+}
+
+function generateSixSsPainPoints(answers, occupation) {
+  const sixSs = ['Significance', 'Safe', 'Supported', 'Successful', 'Surprise-and-delight', 'Sharing'];
+  
+  const painPointTemplates = {
+    Significance: [
+      'Feels overlooked and undervalued in their current role despite their contributions',
+      'Struggles to get recognition for their expertise and innovative ideas',
+      'Wants to be seen as a thought leader but lacks the platform to showcase their knowledge',
+      'Feels invisible in networking situations and industry events'
+    ],
+    Safe: [
+      'Worries about financial security and whether their current income is sustainable',
+      'Fears making the wrong business decisions that could jeopardize their stability',
+      'Anxious about taking risks that might threaten their current comfortable position',
+      'Concerned about market changes affecting their job security or business'
+    ],
+    Supported: [
+      'Feels isolated and lacks a strong professional network or mentorship',
+      'Struggles without access to expert guidance when facing complex challenges',
+      'Wishes they had a community of like-minded professionals to learn from',
+      'Feels like they have to figure everything out alone without proper support systems'
+    ],
+    Successful: [
+      'Frustrated by slow progress toward their definition of professional success',
+      'Compares themselves to others and feels behind in achieving their goals',
+      'Unclear about what metrics truly define success in their field',
+      'Struggles to maintain consistent momentum toward their biggest objectives'
+    ],
+    'Surprise-and-delight': [
+      'Stuck in repetitive routines that lack excitement and growth opportunities',
+      'Craves new challenges but feels trapped in predictable daily patterns',
+      'Wants to experience breakthrough moments but unsure how to create them',
+      'Feels their work has become mundane and lacks the spark it once had'
+    ],
+    Sharing: [
+      'Wants to make a meaningful impact but struggles to find the right channels',
+      'Has valuable knowledge to share but lacks confidence in their teaching abilities',
+      'Desires to give back to their community but unsure how to get started',
+      'Feels their success would be more fulfilling if they could help others achieve similar results'
+    ]
+  };
+
+  const result = {};
+  
+  sixSs.forEach(feeling => {
+    const templates = painPointTemplates[feeling];
+    const selectedTemplate = templates[Math.floor(Math.random() * templates.length)];
+    
+    // Customize based on occupation and answers
+    let customizedPainPoint = selectedTemplate;
+    if (occupation.includes('Owner') || occupation.includes('Founder')) {
+      customizedPainPoint = customizedPainPoint.replace('their current role', 'their business');
+      customizedPainPoint = customizedPainPoint.replace('job security', 'business stability');
+    }
+    
+    result[feeling] = customizedPainPoint;
+  });
+
+  return result;
 }
 
 function getContextualOccupation(answers) {
@@ -70,38 +131,7 @@ function getContextualOccupation(answers) {
   return ['Business Professional', 'Project Manager', 'Team Leader', 'Senior Analyst', 'Operations Specialist', 'Business Development Manager'];
 }
 
-function generatePainPoints(answers) {
-  const basePainPoints = {
-    timeManagement: 'Struggles with work-life balance and effective time management',
-    scaling: 'Difficulty scaling their business or advancing their career to the next level',
-    confidence: 'Lacks confidence in their ability to achieve bigger goals and take risks',
-    overwhelm: 'Feels overwhelmed by conflicting advice and too many strategy options',
-    systemization: 'Trouble creating repeatable systems and processes for growth'
-  };
-  
-  // Add contextual pain points based on user answers
-  if (answers.currentProblem) {
-    basePainPoints.specificChallenge = answers.currentProblem
-      .replace(/^they feel like /i, 'Often feels like ')
-      .replace(/^they believe that /i, 'Believes ')
-      .replace(/^they /i, '')
-      .replace(/\.$/, '');
-  }
-  
-  if (answers.icpDesire) {
-    if (answers.icpDesire.toLowerCase().includes('freedom')) {
-      basePainPoints.freedomBarrier = 'Wants more freedom but feels trapped by current obligations and responsibilities';
-    }
-    if (answers.icpDesire.toLowerCase().includes('income') || answers.icpDesire.toLowerCase().includes('money')) {
-      basePainPoints.incomeGrowth = 'Desires higher income but unsure how to increase earning potential sustainably';
-    }
-  }
-  
-  return basePainPoints;
-}
-
 function getAvatarImage(gender, name) {
-  // Using placeholder avatar service that generates consistent images based on name
   const seed = name.toLowerCase().replace(/\s+/g, '');
   return `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
 }
