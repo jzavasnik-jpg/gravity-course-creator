@@ -353,7 +353,7 @@ Example format: ["They can build a profitable business 3x faster than traditiona
     setApiError('');
 
     try {
-      const response = await fetch('/api/test-course', {
+      const response = await fetch('/api/generate-course', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
