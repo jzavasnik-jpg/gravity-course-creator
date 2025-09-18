@@ -1148,14 +1148,14 @@ if (step === 10) {
   return (
     <div className="h-full flex flex-col space-y-6 overflow-y-auto">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-slate-800">Generated Course Outline</h2>
+        <h2 className="text-2xl font-bold text-slate-800">Course Structure Generated</h2>
         <div className="flex gap-2">
           <button
             onClick={generateCourse}
             disabled={isGeneratingCourse}
             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors text-sm"
           >
-            {isGeneratingCourse ? 'Regenerating...' : 'Regenerate Course'}
+            {isGeneratingCourse ? 'Regenerating...' : 'Regenerate Structure'}
           </button>
         </div>
       </div>
@@ -1175,6 +1175,81 @@ if (step === 10) {
             )}
             
             <p className="text-sm text-slate-500">Estimated Duration: {courseOutline.estimatedHours}</p>
+          </div>
+
+          {/* Lesson Generation Controls */}
+          <div className="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-lg border border-green-200">
+            <h4 className="font-semibold text-slate-800 mb-3">Generate Detailed Lesson Content</h4>
+            <p className="text-slate-600 text-sm mb-4">
+              Your course structure is complete! Now choose how to generate the detailed lesson content with Gravity Culture methodology.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={async () => {
+                  // Generate all lessons sequentially
+                  const generateAllLessons = async () => {
+                    setIsGeneratingCourse(true);
+                    setApiError('');
+                    
+                    try {
+                      const updatedCourse = { ...courseOutline };
+                      
+                      for (let moduleIndex = 0; moduleIndex < updatedCourse.modules.length; moduleIndex++) {
+                        const module = updatedCourse.modules[moduleIndex];
+                        
+                        for (let lessonIndex = 0; lessonIndex < module.lessons.length; lessonIndex++) {
+                          const lesson = module.lessons[lessonIndex];
+                          
+                          // Skip if lesson already has detailed content
+                          if (lesson.hasDetailedContent) continue;
+                          
+                          const response = await fetch('/api/generate-lesson', {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                              answers: userAnswers,
+                              statements: generatedStatements,
+                              avatars: avatars,
+                              courseData: courseOutline,
+                              moduleIndex,
+                              lessonIndex,
+                              userId
+                            })
+                          });
+                          
+                          if (!response.ok) {
+                            throw new Error(`Failed to generate lesson ${lessonIndex + 1} in module ${moduleIndex + 1}`);
+                          }
+                          
+                          const data = await response.json();
+                          updatedCourse.modules[moduleIndex].lessons[lessonIndex] = data.lesson;
+                        }
+                      }
+                      
+                      setCourseOutline(updatedCourse);
+                      await saveUserData({ courseOutline: updatedCourse });
+                      
+                    } catch (error) {
+                      console.error('Error generating all lessons:', error);
+                      setApiError(`Failed to generate lessons: ${error.message}`);
+                    } finally {
+                      setIsGeneratingCourse(false);
+                    }
+                  };
+                  
+                  generateAllLessons();
+                }}
+                disabled={isGeneratingCourse}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+              >
+                {isGeneratingCourse ? 'Generating All Lessons...' : 'Generate All Lesson Content'}
+              </button>
+              <div className="text-sm text-slate-500 flex items-center">
+                or generate lessons individually below
+              </div>
+            </div>
           </div>
 
           {/* Modules */}
@@ -1210,12 +1285,66 @@ if (step === 10) {
                       <div key={lessonIndex} className="bg-slate-50 rounded-lg p-4 space-y-4">
                         <div className="flex items-center justify-between">
                           <h6 className="font-medium text-slate-800 text-lg">{lesson.title}</h6>
-                          <button
-                            onClick={() => setEditingLesson(editingLesson === `${moduleIndex}-${lessonIndex}` ? null : `${moduleIndex}-${lessonIndex}`)}
-                            className="px-2 py-1 bg-slate-200 text-slate-700 rounded text-sm hover:bg-slate-300 transition-colors"
-                          >
-                            {editingLesson === `${moduleIndex}-${lessonIndex}` ? 'Close' : 'Edit'}
-                          </button>
+                          <div className="flex gap-2">
+                            {!lesson.hasDetailedContent ? (
+                              <button
+                                onClick={async () => {
+                                  setIsGeneratingCourse(true);
+                                  setApiError('');
+                                  
+                                  try {
+                                    const response = await fetch('/api/generate-lesson', {
+                                      method: 'POST',
+                                      headers: {
+                                        'Content-Type': 'application/json',
+                                      },
+                                      body: JSON.stringify({
+                                        answers: userAnswers,
+                                        statements: generatedStatements,
+                                        avatars: avatars,
+                                        courseData: courseOutline,
+                                        moduleIndex,
+                                        lessonIndex,
+                                        userId
+                                      })
+                                    });
+                                    
+                                    if (!response.ok) {
+                                      throw new Error(`API call failed: ${response.status}`);
+                                    }
+                                    
+                                    const data = await response.json();
+                                    
+                                    const updatedCourse = { ...courseOutline };
+                                    updatedCourse.modules[moduleIndex].lessons[lessonIndex] = data.lesson;
+                                    setCourseOutline(updatedCourse);
+                                    
+                                    await saveUserData({ courseOutline: updatedCourse });
+                                    
+                                  } catch (error) {
+                                    console.error('Error generating lesson:', error);
+                                    setApiError(`Failed to generate lesson: ${error.message}`);
+                                  } finally {
+                                    setIsGeneratingCourse(false);
+                                  }
+                                }}
+                                disabled={isGeneratingCourse}
+                                className="px-3 py-1 bg-green-100 text-green-700 rounded-md hover:bg-green-200 disabled:opacity-50 transition-colors text-sm"
+                              >
+                                {isGeneratingCourse ? 'Generating...' : 'Generate Content'}
+                              </button>
+                            ) : (
+                              <span className="px-3 py-1 bg-green-100 text-green-700 rounded-md text-sm">
+                                ✓ Content Generated
+                              </span>
+                            )}
+                            <button
+                              onClick={() => setEditingLesson(editingLesson === `${moduleIndex}-${lessonIndex}` ? null : `${moduleIndex}-${lessonIndex}`)}
+                              className="px-2 py-1 bg-slate-200 text-slate-700 rounded text-sm hover:bg-slate-300 transition-colors"
+                            >
+                              {editingLesson === `${moduleIndex}-${lessonIndex}` ? 'Close' : 'View'}
+                            </button>
+                          </div>
                         </div>
                         
                         <p className="text-sm text-slate-600">{lesson.description}</p>
@@ -1227,8 +1356,9 @@ if (step === 10) {
                           </div>
                         )}
 
-                        {lesson.structure && (
-                          <div className="space-y-3 mt-4">
+                        {/* Detailed Content - Only show if generated and expanded */}
+                        {lesson.hasDetailedContent && editingLesson === `${moduleIndex}-${lessonIndex}` && lesson.structure && (
+                          <div className="space-y-3 mt-4 border-t pt-4">
                             {/* Origin Story */}
                             {lesson.structure.originStory && (
                               <div className="bg-green-50 p-3 rounded">
@@ -1304,7 +1434,6 @@ if (step === 10) {
             </button>
             <button
               onClick={() => {
-                // Reset for new course
                 setStep(0);
                 setUserName('');
                 setUserAnswers({
@@ -1345,7 +1474,7 @@ if (step === 10) {
       )}
     </div>
   );
-}  
+}
 // Regular question steps
     return (
       <div className="h-full flex flex-col">
