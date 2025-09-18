@@ -1144,7 +1144,209 @@ if (step === 10) {
     </div>
   );
 }
-    // Regular question steps
+  if (step === 11) {
+  return (
+    <div className="h-full flex flex-col space-y-6 overflow-y-auto">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-slate-800">Generated Course Outline</h2>
+        <div className="flex gap-2">
+          <button
+            onClick={generateCourse}
+            disabled={isGeneratingCourse}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors text-sm"
+          >
+            {isGeneratingCourse ? 'Regenerating...' : 'Regenerate Course'}
+          </button>
+        </div>
+      </div>
+      
+      {courseOutline ? (
+        <div className="space-y-6">
+          {/* Course Header */}
+          <div className="bg-white rounded-lg p-6 border border-slate-200 shadow-sm">
+            <h3 className="text-xl font-bold text-slate-800 mb-2">{courseOutline.title}</h3>
+            <p className="text-slate-600 mb-4">{courseOutline.description}</p>
+            
+            {courseOutline.coreBeliefStatement && (
+              <div className="bg-blue-50 p-4 rounded-lg mb-4">
+                <h4 className="font-semibold text-blue-800 mb-2">Core Belief Statement:</h4>
+                <p className="text-blue-700 italic">"{courseOutline.coreBeliefStatement}"</p>
+              </div>
+            )}
+            
+            <p className="text-sm text-slate-500">Estimated Duration: {courseOutline.estimatedHours}</p>
+          </div>
+
+          {/* Modules */}
+          <div className="space-y-6">
+            {courseOutline.modules && courseOutline.modules.map((module, moduleIndex) => (
+              <div key={moduleIndex} className="bg-white rounded-lg border border-slate-200 shadow-sm">
+                <div className="p-6 border-b border-slate-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-lg font-bold text-slate-800">
+                      Module {moduleIndex + 1}: {module.title}
+                    </h4>
+                    <button
+                      onClick={() => regenerateModule(moduleIndex)}
+                      disabled={isGeneratingCourse}
+                      className="px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 disabled:opacity-50 transition-colors text-sm"
+                    >
+                      {isGeneratingCourse ? 'Regenerating...' : 'Regenerate Module'}
+                    </button>
+                  </div>
+                  <p className="text-slate-600 mb-2">{module.description}</p>
+                  {module.learningObjective && (
+                    <p className="text-sm text-purple-700 bg-purple-50 p-2 rounded">
+                      <strong>Learning Objective:</strong> {module.learningObjective}
+                    </p>
+                  )}
+                </div>
+                
+                {/* Lessons */}
+                {module.lessons && module.lessons.length > 0 && (
+                  <div className="p-6 space-y-4">
+                    <h5 className="font-semibold text-slate-700 mb-4">Lessons:</h5>
+                    {module.lessons.map((lesson, lessonIndex) => (
+                      <div key={lessonIndex} className="bg-slate-50 rounded-lg p-4 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h6 className="font-medium text-slate-800 text-lg">{lesson.title}</h6>
+                          <button
+                            onClick={() => setEditingLesson(editingLesson === `${moduleIndex}-${lessonIndex}` ? null : `${moduleIndex}-${lessonIndex}`)}
+                            className="px-2 py-1 bg-slate-200 text-slate-700 rounded text-sm hover:bg-slate-300 transition-colors"
+                          >
+                            {editingLesson === `${moduleIndex}-${lessonIndex}` ? 'Close' : 'Edit'}
+                          </button>
+                        </div>
+                        
+                        <p className="text-sm text-slate-600">{lesson.description}</p>
+                        
+                        {lesson.coreConcept && (
+                          <div className="bg-yellow-50 p-3 rounded border-l-4 border-yellow-400">
+                            <p className="text-sm font-medium text-yellow-800">Core Concept:</p>
+                            <p className="text-sm text-yellow-700">{lesson.coreConcept}</p>
+                          </div>
+                        )}
+
+                        {lesson.structure && (
+                          <div className="space-y-3 mt-4">
+                            {/* Origin Story */}
+                            {lesson.structure.originStory && (
+                              <div className="bg-green-50 p-3 rounded">
+                                <p className="text-sm font-medium text-green-800 mb-1">Origin Story Hook:</p>
+                                <p className="text-sm text-green-700">{lesson.structure.originStory}</p>
+                              </div>
+                            )}
+
+                            {/* False Beliefs */}
+                            {lesson.structure.falseBeliefs && lesson.structure.falseBeliefs.length > 0 && (
+                              <div className="bg-red-50 p-3 rounded">
+                                <p className="text-sm font-medium text-red-800 mb-2">False Beliefs to Address:</p>
+                                <ul className="text-sm text-red-700 space-y-1">
+                                  {lesson.structure.falseBeliefs.map((belief, index) => (
+                                    <li key={index}>• {belief}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {/* Three Secrets */}
+                            {lesson.structure.secrets && lesson.structure.secrets.length > 0 && (
+                              <div className="bg-blue-50 p-3 rounded">
+                                <p className="text-sm font-medium text-blue-800 mb-2">Three Secrets Framework:</p>
+                                <div className="space-y-2">
+                                  {lesson.structure.secrets.map((secret, index) => (
+                                    <div key={index} className="bg-white p-2 rounded border">
+                                      <p className="text-sm font-medium text-blue-800">{secret.title}</p>
+                                      <p className="text-xs text-blue-600 mb-1">{secret.description}</p>
+                                      <p className="text-sm text-blue-700">{secret.explanation}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Tactics */}
+                            {lesson.structure.tactics && lesson.structure.tactics.length > 0 && (
+                              <div className="bg-purple-50 p-3 rounded">
+                                <p className="text-sm font-medium text-purple-800 mb-2">Implementation Tactics:</p>
+                                <ul className="text-sm text-purple-700 space-y-1">
+                                  {lesson.structure.tactics.map((tactic, index) => (
+                                    <li key={index}>• {tactic}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {/* Exercise */}
+                            {lesson.structure.exercise && (
+                              <div className="bg-orange-50 p-3 rounded">
+                                <p className="text-sm font-medium text-orange-800 mb-1">Exercise:</p>
+                                <p className="text-sm text-orange-700">{lesson.structure.exercise}</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Course Actions */}
+          <div className="flex gap-4 pt-4 border-t border-slate-200">
+            <button
+              onClick={() => setStep(10)}
+              className="px-4 py-2 bg-slate-500 text-white rounded-lg hover:bg-slate-600 transition-colors"
+            >
+              Back to Avatars
+            </button>
+            <button
+              onClick={() => {
+                // Reset for new course
+                setStep(0);
+                setUserName('');
+                setUserAnswers({
+                  icpDesire: '', icpDecision: '', currentProblem: '', icpDestination: '',
+                  uniqueFramework: '', fourDesires: '', sixSs: '', promisedResult: ''
+                });
+                setGeneratedStatements({ solutionStatement: '', uspStatement: '' });
+                setGeneratedStatementsHistory([]);
+                setCourseOutline(null);
+                setAvatars({
+                  male: { name: '', age: '', income: '', location: '', occupation: '', imageUrl: '', painPoints: {} },
+                  female: { name: '', age: '', income: '', location: '', occupation: '', imageUrl: '', painPoints: {} }
+                });
+                localStorage.removeItem('gravity_user_profile');
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Create New Course
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="text-center py-8">
+          <p className="text-slate-600">No course outline available</p>
+          <button
+            onClick={() => setStep(10)}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Go Back to Generate Course
+          </button>
+        </div>
+      )}
+
+      {apiError && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          {apiError}
+        </div>
+      )}
+    </div>
+  );
+}  
+// Regular question steps
     return (
       <div className="h-full flex flex-col">
         {/* Question Header - Pinned to Top */}
