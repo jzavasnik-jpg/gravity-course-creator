@@ -15,7 +15,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'API key not configured' });
     }
 
-    const prompt = `You are an expert course creator specializing in the Gravity Culture methodology. Create a comprehensive 6-module course based on the provided data.
+    const prompt = `You are an expert course creator specializing in the Gravity Culture methodology. Create a course outline (structure only, no detailed lesson content) based on the provided data.
 
 CORE METHODOLOGY:
 The entire course must be designed around ONE CORE BELIEF: that the "new opportunity" (USP) is the key to achieving the desired result, and this opportunity is only attainable through the specific framework provided.
@@ -35,41 +35,18 @@ MARKETING STATEMENTS:
 TARGET AVATARS:
 - Male Avatar: ${avatars.male.name} (${avatars.male.age || 'age unspecified'})
 - Female Avatar: ${avatars.female.name} (${avatars.female.age || 'age unspecified'})
-- Primary Emotion to Elicit: ${answers.sixSs}
 
-COURSE STRUCTURE REQUIREMENTS:
+REQUIREMENTS:
+1. Create a compelling course title that reflects the unique framework
+2. Write a course description emphasizing the "new opportunity" concept
+3. Create a core belief statement for the entire course
+4. Design 6 modules that systematically dismantle false beliefs and build belief in the new opportunity
+5. Each module should have 3-5 lesson titles with brief descriptions
+6. Focus on the overall structure and learning progression - detailed lesson content will be generated separately
 
-1. COURSE TITLE & DESCRIPTION:
-   - Create a compelling course title that reflects the unique framework
-   - Write a course description that emphasizes the "new opportunity" concept
+Generate a course outline that will transform ${avatars.male.name} and ${avatars.female.name} from "${answers.currentProblem}" to believing they can achieve "${answers.icpDestination}" through "${answers.uniqueFramework}".
 
-2. SIX MODULES (each with 3-5 lessons):
-   - Each module should support the core thesis of the USP
-   - Address different aspects of dismantling false beliefs
-   - Build progressive belief in the new opportunity
-
-3. LESSON STRUCTURE (for each lesson):
-   - One Core Concept: The single most crucial understanding for that lesson
-   - Origin Story Hook: Engaging narrative that introduces the need for this concept
-   - Three Secrets Framework:
-     * Secret 1: Addresses false belief about the vehicle/framework itself
-     * Secret 2: Addresses false belief about external factors preventing success
-     * Secret 3: Addresses false belief about internal factors preventing success
-   - Tactics: 2-3 practical implementation tactics
-   - Exercise: Hands-on activity to reinforce the lesson
-
-4. EMOTIONAL ALIGNMENT:
-   - All content should elicit feelings that align with "${answers.sixSs}"
-   - Language and tone should resonate with both ${avatars.male.name} and ${avatars.female.name}
-
-5. BELIEF TRANSFORMATION:
-   - Each module should systematically replace old beliefs with new ones
-   - Focus on emotional connection first, then logical justification
-   - Address the specific pain points identified in the avatar analysis
-
-Generate a complete course that will transform ${avatars.male.name} and ${avatars.female.name} from their current state of "${answers.currentProblem}" to believing they can achieve "${answers.icpDestination}" through "${answers.uniqueFramework}".
-
-Return as properly formatted JSON with this exact structure:
+Return as JSON with this structure:
 {
   "title": "Course Title",
   "description": "Course description emphasizing new opportunity",
@@ -78,36 +55,14 @@ Return as properly formatted JSON with this exact structure:
   "modules": [
     {
       "title": "Module Title",
-      "description": "Module description",
+      "description": "Module description and purpose",
       "learningObjective": "What belief this module installs",
       "lessons": [
         {
           "title": "Lesson Title",
-          "description": "Lesson overview",
-          "coreConcept": "The one crucial foundational concept",
-          "structure": {
-            "originStory": "Engaging hook narrative that starts at protagonist's struggle",
-            "falseBeliefs": ["Common misconception 1", "Common misconception 2", "Common misconception 3"],
-            "secrets": [
-              {
-                "title": "Secret 1 Title",
-                "description": "Addresses false belief about the vehicle/framework",
-                "explanation": "Detailed framework explanation"
-              },
-              {
-                "title": "Secret 2 Title", 
-                "description": "Addresses false belief about external factors",
-                "explanation": "Detailed framework explanation"
-              },
-              {
-                "title": "Secret 3 Title",
-                "description": "Addresses false belief about internal factors", 
-                "explanation": "Detailed framework explanation"
-              }
-            ],
-            "tactics": ["Practical tactic 1", "Practical tactic 2", "Practical tactic 3"],
-            "exercise": "Hands-on activity description"
-          }
+          "description": "Brief lesson overview",
+          "coreConcept": "The one crucial concept this lesson teaches",
+          "hasDetailedContent": false
         }
       ]
     }
@@ -150,32 +105,7 @@ Return as properly formatted JSON with this exact structure:
                           title: { type: "STRING" },
                           description: { type: "STRING" },
                           coreConcept: { type: "STRING" },
-                          structure: {
-                            type: "OBJECT",
-                            properties: {
-                              originStory: { type: "STRING" },
-                              falseBeliefs: {
-                                type: "ARRAY",
-                                items: { type: "STRING" }
-                              },
-                              secrets: {
-                                type: "ARRAY",
-                                items: {
-                                  type: "OBJECT",
-                                  properties: {
-                                    title: { type: "STRING" },
-                                    description: { type: "STRING" },
-                                    explanation: { type: "STRING" }
-                                  }
-                                }
-                              },
-                              tactics: {
-                                type: "ARRAY",
-                                items: { type: "STRING" }
-                              },
-                              exercise: { type: "STRING" }
-                            }
-                          }
+                          hasDetailedContent: { type: "BOOLEAN" }
                         }
                       }
                     }
@@ -202,7 +132,7 @@ Return as properly formatted JSON with this exact structure:
 
     const courseData = JSON.parse(generatedText);
 
-    console.log(`Generated course "${courseData.title}" for user ${userId || 'anonymous'} with ${courseData.modules.length} modules`);
+    console.log(`Generated course structure "${courseData.title}" for user ${userId || 'anonymous'} with ${courseData.modules.length} modules`);
 
     return res.status(200).json({ 
       course: courseData,
@@ -215,9 +145,9 @@ Return as properly formatted JSON with this exact structure:
     });
 
   } catch (error) {
-    console.error('Error generating course:', error);
+    console.error('Error generating course structure:', error);
     return res.status(500).json({ 
-      error: `Failed to generate course: ${error.message}` 
+      error: `Failed to generate course structure: ${error.message}` 
     });
   }
 }
