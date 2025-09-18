@@ -1028,7 +1028,88 @@ Example format: ["They can build a profitable business 3x faster than traditiona
     </div>
   );
 }
+if (step === 10) {
+  return (
+    <div className="h-full flex flex-col space-y-6">
+      <h2 className="text-2xl font-bold text-slate-800">Customer Avatars Generated</h2>
+      <p className="text-slate-600">
+        Here are your ideal customer profiles based on your ICP data. You can edit any details to better match your target audience.
+      </p>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Male Avatar */}
+        <div className="bg-white rounded-lg p-6 border border-slate-200 shadow-sm">
+          <div className="flex items-center gap-4 mb-4">
+            <img 
+              src={avatars.male.imageUrl} 
+              alt={avatars.male.name}
+              className="w-16 h-16 rounded-full bg-slate-100"
+            />
+            <div>
+              <h3 className="font-bold text-lg text-slate-800">{avatars.male.name}</h3>
+              <p className="text-slate-600">{avatars.male.occupation}</p>
+            </div>
+          </div>
+          
+          <div className="space-y-3 text-sm">
+            <div><strong>Age:</strong> {avatars.male.age}</div>
+            <div><strong>Income:</strong> {avatars.male.income}</div>
+            <div><strong>Location:</strong> {avatars.male.location}</div>
+          </div>
+          
+          <div className="mt-4">
+            <h4 className="font-semibold text-slate-800 mb-2">Key Challenges:</h4>
+            <div className="space-y-1 text-sm text-slate-600">
+              {Object.values(avatars.male.painPoints || {}).map((point, index) => (
+                <div key={index}>• {point}</div>
+              ))}
+            </div>
+          </div>
+        </div>
 
+        {/* Female Avatar */}
+        <div className="bg-white rounded-lg p-6 border border-slate-200 shadow-sm">
+          <div className="flex items-center gap-4 mb-4">
+            <img 
+              src={avatars.female.imageUrl} 
+              alt={avatars.female.name}
+              className="w-16 h-16 rounded-full bg-slate-100"
+            />
+            <div>
+              <h3 className="font-bold text-lg text-slate-800">{avatars.female.name}</h3>
+              <p className="text-slate-600">{avatars.female.occupation}</p>
+            </div>
+          </div>
+          
+          <div className="space-y-3 text-sm">
+            <div><strong>Age:</strong> {avatars.female.age}</div>
+            <div><strong>Income:</strong> {avatars.female.income}</div>
+            <div><strong>Location:</strong> {avatars.female.location}</div>
+          </div>
+          
+          <div className="mt-4">
+            <h4 className="font-semibold text-slate-800 mb-2">Key Challenges:</h4>
+            <div className="space-y-1 text-sm text-slate-600">
+              {Object.values(avatars.female.painPoints || {}).map((point, index) => (
+                <div key={index}>• {point}</div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button
+        onClick={() => {
+          // Placeholder for next step (course generation)
+          alert('Course generation coming next!');
+        }}
+        className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+      >
+        Continue to Course Generation
+      </button>
+    </div>
+  );
+}
     // Regular question steps
     return (
       <div className="h-full flex flex-col">
