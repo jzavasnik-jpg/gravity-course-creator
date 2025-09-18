@@ -6,132 +6,112 @@ export default async function handler(req, res) {
   try {
     const { answers, statements, userId } = req.body;
 
-    const maleAvatar = generateAvatar('male', answers);
-    const femaleAvatar = generateAvatar('female', answers);
+    if (!answers || !statements) {
+      return res.status(400).json({ error: 'Missing required data' });
+    }
 
-    return res.status(200).json({
-      avatars: {
-        male: maleAvatar,
-        female: femaleAvatar
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ error: 'API key not configured' });
+    }
+
+    const prompt = `Create two detailed customer avatars based on this ICP data:
+
+ICP FOUNDATION:
+- Deepest Desire: ${answers.icpDesire}
+- Current Problem: ${answers.currentProblem}
+- Ultimate Destination: ${answers.icpDestination}
+- Unique Framework: ${answers.uniqueFramework}
+- Primary Emotion: ${answers.sixSs}
+
+MARKETING STATEMENTS:
+- Solution Statement: ${statements.solutionStatement}
+- USP Statement: ${statements.uspStatement}
+
+Create one male avatar and one female avatar. For images, use placeholder URLs that clearly specify gender:
+- Male avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
+- Female avatar: "https://images.unsplash.com/photo-1494790108755-2616b2e1d7cc?w=150&h=150&fit=crop&crop=face"
+
+Return as JSON:
+{
+  "male": {
+    "name": "Male Name",
+    "age": "Age range",
+    "income": "Income level",
+    "location": "Location",
+    "occupation": "Job title",
+    "imageUrl": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+    "sixSsPainPoints": {
+      "Significance": "How they feel insignificant",
+      "Safe": "How they feel unsafe",
+      "Supported": "How they feel unsupported",
+      "Successful": "How they feel unsuccessful",
+      "Surprise-and-delight": "How they lack excitement",
+      "Sharing": "How they feel unable to contribute"
+    }
+  },
+  "female": {
+    "name": "Female Name",
+    "age": "Age range", 
+    "income": "Income level",
+    "location": "Location",
+    "occupation": "Job title",
+    "imageUrl": "https://images.unsplash.com/photo-1494790108755-2616b2e1d7cc?w=150&h=150&fit=crop&crop=face",
+    "sixSsPainPoints": {
+      "Significance": "How they feel insignificant",
+      "Safe": "How they feel unsafe", 
+      "Supported": "How they feel unsupported",
+      "Successful": "How they feel unsuccessful",
+      "Surprise-and-delight": "How they lack excitement",
+      "Sharing": "How they feel unable to contribute"
+    }
+  }
+}`;
+
+    // Rest of your API code...
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-      userId: userId
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: prompt
+          }]
+        }],
+        generationConfig: {
+          responseMimeType: "application/json"
+        }
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Gemini API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const generatedText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    
+    if (!generatedText) {
+      throw new Error('No content generated');
+    }
+
+    const avatarData = JSON.parse(generatedText);
+
+    // Ensure correct gender images are set (fallback in case AI doesn't follow instructions)
+    avatarData.male.imageUrl = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face";
+    avatarData.female.imageUrl = "https://images.unsplash.com/photo-1494790108755-2616b2e1d7cc?w=150&h=150&fit=crop&crop=face";
+
+    return res.status(200).json({ 
+      avatars: avatarData,
+      timestamp: new Date().toISOString()
     });
 
   } catch (error) {
+    console.error('Error generating avatars:', error);
     return res.status(500).json({ 
-      error: 'Failed to generate avatars',
-      details: error.message 
+      error: `Failed to generate avatars: ${error.message}` 
     });
   }
-}
-
-function generateAvatar(gender, answers) {
-  const maleNames = ['Michael', 'David', 'James', 'Robert', 'John', 'Mark', 'Steve', 'Chris', 'Daniel', 'Andrew'];
-  const femaleNames = ['Sarah', 'Jennifer', 'Lisa', 'Michelle', 'Amanda', 'Jessica', 'Rachel', 'Emily', 'Lauren', 'Nicole'];
-  
-  const names = gender === 'male' ? maleNames : femaleNames;
-  const name = names[Math.floor(Math.random() * names.length)];
-  
-  const ages = ['28-35', '35-42', '42-48', '38-45', '32-40', '30-38', '40-47'];
-  const age = ages[Math.floor(Math.random() * ages.length)];
-  
-  const incomes = ['$75K-$125K', '$125K-$200K', '$85K-$150K', '$100K-$175K', '$65K-$100K', '$150K-$250K'];
-  const income = incomes[Math.floor(Math.random() * incomes.length)];
-  
-  const locations = ['Austin, TX', 'Denver, CO', 'Nashville, TN', 'Portland, OR', 'Raleigh, NC', 'Phoenix, AZ', 'Atlanta, GA', 'Seattle, WA'];
-  const location = locations[Math.floor(Math.random() * locations.length)];
-  
-  const occupations = getContextualOccupation(answers);
-  const occupation = occupations[Math.floor(Math.random() * occupations.length)];
-  
-  const sixSsPainPoints = generateSixSsPainPoints(answers, occupation);
-
-  return {
-    name: name,
-    age: age,
-    income: income,
-    location: location,
-    occupation: occupation,
-    imageUrl: getAvatarImage(gender, name),
-    sixSsPainPoints: sixSsPainPoints
-  };
-}
-
-function generateSixSsPainPoints(answers, occupation) {
-  const sixSs = ['Significance', 'Safe', 'Supported', 'Successful', 'Surprise-and-delight', 'Sharing'];
-  
-  const painPointTemplates = {
-    Significance: [
-      'Feels overlooked and undervalued in their current role despite their contributions',
-      'Struggles to get recognition for their expertise and innovative ideas',
-      'Wants to be seen as a thought leader but lacks the platform to showcase their knowledge',
-      'Feels invisible in networking situations and industry events'
-    ],
-    Safe: [
-      'Worries about financial security and whether their current income is sustainable',
-      'Fears making the wrong business decisions that could jeopardize their stability',
-      'Anxious about taking risks that might threaten their current comfortable position',
-      'Concerned about market changes affecting their job security or business'
-    ],
-    Supported: [
-      'Feels isolated and lacks a strong professional network or mentorship',
-      'Struggles without access to expert guidance when facing complex challenges',
-      'Wishes they had a community of like-minded professionals to learn from',
-      'Feels like they have to figure everything out alone without proper support systems'
-    ],
-    Successful: [
-      'Frustrated by slow progress toward their definition of professional success',
-      'Compares themselves to others and feels behind in achieving their goals',
-      'Unclear about what metrics truly define success in their field',
-      'Struggles to maintain consistent momentum toward their biggest objectives'
-    ],
-    'Surprise-and-delight': [
-      'Stuck in repetitive routines that lack excitement and growth opportunities',
-      'Craves new challenges but feels trapped in predictable daily patterns',
-      'Wants to experience breakthrough moments but unsure how to create them',
-      'Feels their work has become mundane and lacks the spark it once had'
-    ],
-    Sharing: [
-      'Wants to make a meaningful impact but struggles to find the right channels',
-      'Has valuable knowledge to share but lacks confidence in their teaching abilities',
-      'Desires to give back to their community but unsure how to get started',
-      'Feels their success would be more fulfilling if they could help others achieve similar results'
-    ]
-  };
-
-  const result = {};
-  
-  sixSs.forEach(feeling => {
-    const templates = painPointTemplates[feeling];
-    const selectedTemplate = templates[Math.floor(Math.random() * templates.length)];
-    
-    // Customize based on occupation and answers
-    let customizedPainPoint = selectedTemplate;
-    if (occupation.includes('Owner') || occupation.includes('Founder')) {
-      customizedPainPoint = customizedPainPoint.replace('their current role', 'their business');
-      customizedPainPoint = customizedPainPoint.replace('job security', 'business stability');
-    }
-    
-    result[feeling] = customizedPainPoint;
-  });
-
-  return result;
-}
-
-function getContextualOccupation(answers) {
-  if (answers.icpDesire?.toLowerCase().includes('entrepreneur') || answers.icpDesire?.toLowerCase().includes('business')) {
-    return ['Small Business Owner', 'Startup Founder', 'Independent Consultant', 'Freelance Professional', 'Agency Owner', 'E-commerce Entrepreneur'];
-  }
-  if (answers.icpDesire?.toLowerCase().includes('coach') || answers.icpDesire?.toLowerCase().includes('consultant')) {
-    return ['Business Coach', 'Life Coach', 'Marketing Consultant', 'Strategy Consultant', 'Executive Coach', 'Leadership Consultant'];
-  }
-  if (answers.icpDesire?.toLowerCase().includes('corporate') || answers.icpDesire?.toLowerCase().includes('executive')) {
-    return ['Corporate Executive', 'Sales Director', 'Marketing Manager', 'Operations Manager', 'VP of Sales', 'Department Head'];
-  }
-  return ['Business Professional', 'Project Manager', 'Team Leader', 'Senior Analyst', 'Operations Specialist', 'Business Development Manager'];
-}
-
-function getAvatarImage(gender, name) {
-  const seed = name.toLowerCase().replace(/\s+/g, '');
-  return `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
 }
