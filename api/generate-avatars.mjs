@@ -15,60 +15,48 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'API key not configured' });
     }
 
-    const prompt = `Create two detailed customer avatars based on this ICP data:
+    // Simplified prompt with reliable image placeholders
+    const prompt = `Create two customer avatars based on this data:
 
-ICP FOUNDATION:
-- Deepest Desire: ${answers.icpDesire}
-- Current Problem: ${answers.currentProblem}
-- Ultimate Destination: ${answers.icpDestination}
-- Unique Framework: ${answers.uniqueFramework}
-- Primary Emotion: ${answers.sixSs}
+Desire: ${answers.icpDesire}
+Problem: ${answers.currentProblem}
+Target outcome: ${answers.icpDestination}
+Primary emotion: ${answers.sixSs}
 
-MARKETING STATEMENTS:
-- Solution Statement: ${statements.solutionStatement}
-- USP Statement: ${statements.uspStatement}
-
-Create one male avatar and one female avatar. For images, use placeholder URLs that clearly specify gender:
-- Male avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
-- Female avatar: "https://images.unsplash.com/photo-1494790108755-2616b2e1d7cc?w=150&h=150&fit=crop&crop=face"
-
-Return as JSON:
+Create realistic male and female avatars. Return only valid JSON:
 {
   "male": {
-    "name": "Male Name",
-    "age": "Age range",
-    "income": "Income level",
-    "location": "Location",
-    "occupation": "Job title",
-    "imageUrl": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+    "name": "Male First Name",
+    "age": "30-40",
+    "income": "$75,000-$150,000",
+    "location": "City, State",
+    "occupation": "Job Title",
     "sixSsPainPoints": {
       "Significance": "How they feel insignificant",
       "Safe": "How they feel unsafe",
-      "Supported": "How they feel unsupported",
+      "Supported": "How they feel unsupported", 
       "Successful": "How they feel unsuccessful",
       "Surprise-and-delight": "How they lack excitement",
       "Sharing": "How they feel unable to contribute"
     }
   },
   "female": {
-    "name": "Female Name",
-    "age": "Age range", 
-    "income": "Income level",
-    "location": "Location",
-    "occupation": "Job title",
-    "imageUrl": "https://images.unsplash.com/photo-1494790108755-2616b2e1d7cc?w=150&h=150&fit=crop&crop=face",
+    "name": "Female First Name", 
+    "age": "28-38",
+    "income": "$65,000-$125,000",
+    "location": "City, State",
+    "occupation": "Job Title",
     "sixSsPainPoints": {
       "Significance": "How they feel insignificant",
-      "Safe": "How they feel unsafe", 
+      "Safe": "How they feel unsafe",
       "Supported": "How they feel unsupported",
-      "Successful": "How they feel unsuccessful",
+      "Successful": "How they feel unsuccessful", 
       "Surprise-and-delight": "How they lack excitement",
       "Sharing": "How they feel unable to contribute"
     }
   }
 }`;
 
-    // Rest of your API code...
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: {
@@ -81,7 +69,8 @@ Return as JSON:
           }]
         }],
         generationConfig: {
-          responseMimeType: "application/json"
+          temperature: 0.7,
+          maxOutputTokens: 1024
         }
       })
     });
@@ -97,11 +86,12 @@ Return as JSON:
       throw new Error('No content generated');
     }
 
-    const avatarData = JSON.parse(generatedText);
+    const cleanedText = generatedText.replace(/```json\n?|\n?```/g, '').trim();
+    const avatarData = JSON.parse(cleanedText);
 
-    // Ensure correct gender images are set (fallback in case AI doesn't follow instructions)
-    avatarData.male.imageUrl = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face";
-    avatarData.female.imageUrl = "https://images.unsplash.com/photo-1494790108755-2616b2e1d7cc?w=150&h=150&fit=crop&crop=face";
+    // Add reliable placeholder images
+    avatarData.male.imageUrl = `https://ui-avatars.com/api/?name=${avatarData.male.name}&background=4f46e5&color=white&size=150&format=png`;
+    avatarData.female.imageUrl = `https://ui-avatars.com/api/?name=${avatarData.female.name}&background=ec4899&color=white&size=150&format=png`;
 
     return res.status(200).json({ 
       avatars: avatarData,
