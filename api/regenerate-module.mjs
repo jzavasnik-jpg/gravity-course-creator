@@ -1,4 +1,4 @@
-// api/regenerate-module.js
+// api/regenerate-module.mjs
 export default async function handler(req, res) {
   // Only allow POST requests
   if (req.method !== 'POST') {
