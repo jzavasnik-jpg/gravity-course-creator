@@ -15,44 +15,38 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'API key not configured' });
     }
 
-    // Simplified prompt with reliable image placeholders
-    const prompt = `Create two customer avatars based on this data:
+    // Very simple prompt to avoid API issues
+    const prompt = `Create two customer personas based on: Problem="${answers.currentProblem}", Desire="${answers.icpDesire}", Solution="${answers.uniqueFramework}". Return valid JSON only:
 
-Desire: ${answers.icpDesire}
-Problem: ${answers.currentProblem}
-Target outcome: ${answers.icpDestination}
-Primary emotion: ${answers.sixSs}
-
-Create realistic male and female avatars. Return only valid JSON:
 {
   "male": {
-    "name": "Male First Name",
-    "age": "30-40",
-    "income": "$75,000-$150,000",
-    "location": "City, State",
-    "occupation": "Job Title",
+    "name": "John Smith",
+    "age": "35-45",
+    "income": "$80,000-$120,000", 
+    "location": "Austin, TX",
+    "occupation": "Marketing Manager",
     "sixSsPainPoints": {
-      "Significance": "How they feel insignificant",
-      "Safe": "How they feel unsafe",
-      "Supported": "How they feel unsupported", 
-      "Successful": "How they feel unsuccessful",
-      "Surprise-and-delight": "How they lack excitement",
-      "Sharing": "How they feel unable to contribute"
+      "Significance": "Feels overlooked for promotions",
+      "Safe": "Worried about job security",
+      "Supported": "Lacks mentorship", 
+      "Successful": "Behind on career goals",
+      "Surprise-and-delight": "Work feels routine",
+      "Sharing": "Can't contribute meaningfully"
     }
   },
   "female": {
-    "name": "Female First Name", 
-    "age": "28-38",
-    "income": "$65,000-$125,000",
-    "location": "City, State",
-    "occupation": "Job Title",
+    "name": "Sarah Johnson",
+    "age": "30-40", 
+    "income": "$70,000-$110,000",
+    "location": "Denver, CO", 
+    "occupation": "Business Consultant",
     "sixSsPainPoints": {
-      "Significance": "How they feel insignificant",
-      "Safe": "How they feel unsafe",
-      "Supported": "How they feel unsupported",
-      "Successful": "How they feel unsuccessful", 
-      "Surprise-and-delight": "How they lack excitement",
-      "Sharing": "How they feel unable to contribute"
+      "Significance": "Struggles to be heard in meetings",
+      "Safe": "Uncertain about business stability", 
+      "Supported": "Feels isolated as entrepreneur",
+      "Successful": "Revenue goals unmet",
+      "Surprise-and-delight": "Lacks excitement in work",
+      "Sharing": "Unable to make desired impact"
     }
   }
 }`;
@@ -64,14 +58,8 @@ Create realistic male and female avatars. Return only valid JSON:
       },
       body: JSON.stringify({
         contents: [{
-          parts: [{
-            text: prompt
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 1024
-        }
+          parts: [{ text: prompt }]
+        }]
       })
     });
 
@@ -89,9 +77,9 @@ Create realistic male and female avatars. Return only valid JSON:
     const cleanedText = generatedText.replace(/```json\n?|\n?```/g, '').trim();
     const avatarData = JSON.parse(cleanedText);
 
-    // Add reliable placeholder images
-    avatarData.male.imageUrl = `https://ui-avatars.com/api/?name=${avatarData.male.name}&background=4f46e5&color=white&size=150&format=png`;
-    avatarData.female.imageUrl = `https://ui-avatars.com/api/?name=${avatarData.female.name}&background=ec4899&color=white&size=150&format=png`;
+    // Add reliable placeholder images with different colors for gender
+    avatarData.male.imageUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarData.male.name)}&background=4f46e5&color=white&size=150`;
+    avatarData.female.imageUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarData.female.name)}&background=ec4899&color=white&size=150`;
 
     return res.status(200).json({ 
       avatars: avatarData,
