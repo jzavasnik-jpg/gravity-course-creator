@@ -1608,6 +1608,7 @@ if (step === 10) {
         </div>
       </div>
     );
+};
 
   // Render the preview panel content
   const renderPreviewPanel = () => {
