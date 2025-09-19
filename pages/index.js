@@ -578,7 +578,55 @@ Example format: ["They can build a profitable business 3x faster than traditiona
       courseOutline: updatedCourse
     });
   };
+// Regenerate individual lesson
+const regenerateLesson = async (moduleIndex, lessonIndex) => {
+  setIsGeneratingCourse(true);
+  setApiError('');
 
+  try {
+    const response = await fetch('/api/regenerate-lesson', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        answers: userAnswers,
+        statements: generatedStatements,
+        avatars: avatars,
+        courseData: courseOutline,
+        moduleIndex,
+        lessonIndex,
+        userId
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`API call failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    // Update the specific lesson
+    const updatedCourse = { ...courseOutline };
+    updatedCourse.modules[moduleIndex].lessons[lessonIndex] = data.lesson;
+    setCourseOutline(updatedCourse);
+
+    // Save to user profile
+    await saveUserData({
+      courseOutline: updatedCourse
+    });
+    
+  } catch (error) {
+    console.error('Error regenerating lesson:', error);
+    setApiError(`Failed to regenerate lesson: ${error.message}`);
+  } finally {
+    setIsGeneratingCourse(false);
+  }
+};
   // Generate final marketing statements with history tracking
   const generateStatements = async (answers) => {
     setIsLoading(true);
@@ -1638,28 +1686,26 @@ Example format: ["They can build a profitable business 3x faster than traditiona
                                     {isGeneratingCourse ? 'Generating...' : 'Generate Content'}
                                   </button>
                                 ) : (
-                                  <span className="px-3 py-1 bg-green-100 text-green-700 rounded-md text-sm">
-                                    ✓ Content Generated
-                                  </span>
-                                )}
-                                <button
-                                  onClick={() => setEditingLesson(editingLesson === `${moduleIndex}-${lessonIndex}` ? null : `${moduleIndex}-${lessonIndex}`)}
-                                  className="px-2 py-1 bg-slate-200 text-slate-700 rounded text-sm hover:bg-slate-300 transition-colors"
-                                >
-                                  {editingLesson === `${moduleIndex}-${lessonIndex}` ? 'Close' : 'View'}
-                                </button>
-                              </div>
-                            </div>
-                            
-                            <p className="text-sm text-slate-600">{lesson.description}</p>
-                            
-                            {lesson.coreConcept && (
-                              <div className="bg-yellow-50 p-3 rounded border-l-4 border-yellow-400">
-                                <p className="text-sm font-medium text-yellow-800">Core Concept:</p>
-                                <p className="text-sm text-yellow-700">{lesson.coreConcept}</p>
-                              </div>
-                            )}
-
+  <>
+    <span className="px-3 py-1 bg-green-100 text-green-700 rounded-md text-sm">
+      ✓ Content Generated
+    </span>
+    <button
+      onClick={() => regenerateLesson(moduleIndex, lessonIndex)}
+      disabled={isGeneratingCourse}
+      className="px-3 py-1 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 disabled:opacity-50 transition-colors text-sm"
+    >
+      {isGeneratingCourse ? 'Regenerating...' : 'Regenerate'}
+    </button>
+  </>
+)}
+<button
+    onClick={() => setEditingLesson(editingLesson === `${moduleIndex}-${lessonIndex}` ? null : `${moduleIndex}-${lessonIndex}`)}
+    className="px-2 py-1 bg-slate-200 text-slate-700 rounded text-sm hover:bg-slate-300 transition-colors"
+  >
+    {editingLesson === `${moduleIndex}-${lessonIndex}` ? 'Close' : 'View'}
+  </button>
+</div>
                             {/* Detailed Content - Only show if generated and expanded */}
                             {lesson.hasDetailedContent && editingLesson === `${moduleIndex}-${lessonIndex}` && lesson.structure && (
                               <div className="space-y-3 mt-4 border-t pt-4">
