@@ -1462,7 +1462,7 @@ const regenerateLesson = async (moduleIndex, lessonIndex) => {
                             onRegenerate={() => regeneratePainPoint('female', feeling)}
                             onUpdate={(newPainPoint) => updatePainPoint('female', feeling, newPainPoint)}
                           />
-                        ))}
+                       })}
                       </tbody>
                     </table>
                   </div>
